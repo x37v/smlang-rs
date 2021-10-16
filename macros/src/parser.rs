@@ -2,7 +2,7 @@ use proc_macro2::Span;
 use std::collections::HashMap;
 use syn::{
     braced, bracketed, parenthesized, parse, spanned::Spanned, token, GenericArgument, Ident,
-    Lifetime, PathArguments, Token, Type,
+    Lifetime, Pat, PathArguments, Token, Type,
 };
 
 #[derive(Debug)]
@@ -42,7 +42,7 @@ pub struct ParsedStateMachine {
     pub starting_state: Ident,
     pub state_data_type: HashMap<String, Type>,
     pub events: HashMap<String, Ident>,
-    pub event_data_type: HashMap<String, Type>,
+    pub event_data_type: HashMap<String, Pat>,
     pub all_event_data_lifetimes: Vec<Lifetime>,
     pub event_data_lifetimes: HashMap<String, Vec<Lifetime>>,
     pub states_events_mapping: HashMap<String, HashMap<String, EventMapping>>,
@@ -146,6 +146,7 @@ impl ParsedStateMachine {
                     None => {
                         let mut lifetimes = Vec::new();
                         match &event_type {
+                            /*
                             Type::Reference(tr) => {
                                 if let Some(lifetime) = &tr.lifetime {
                                     lifetimes.push(lifetime.clone());
@@ -168,6 +169,7 @@ impl ParsedStateMachine {
                                     }
                                 }
                             }
+                            */
                             _ => (),
                         }
                         event_data_type.insert(transition.event.to_string(), event_type);
@@ -259,7 +261,7 @@ pub struct StateTransition {
     in_state: Ident,
     in_state_data_type: Option<Type>,
     event: Ident,
-    event_data_type: Option<Type>,
+    event_data_type: Option<Pat>,
     guard: Option<Ident>,
     action: Option<Ident>,
     out_state: Ident,
@@ -324,7 +326,8 @@ impl parse::Parse for StateTransition {
         let event_data_type = if input.peek(token::Paren) {
             let content;
             parenthesized!(content in input);
-            let input: Type = content.parse()?;
+            let input: Pat = content.parse()?;
+            /*
 
             // Check so the type is supported
             match &input {
@@ -338,10 +341,11 @@ impl parse::Parse for StateTransition {
                     return Err(parse::Error::new(
                         input.span(),
                         "This is an unsupported type for events.",
-                    ))
+                    ));
                 }
             }
 
+            */
             Some(input)
         } else {
             None

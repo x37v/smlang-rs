@@ -5,7 +5,7 @@ use proc_macro2;
 use proc_macro2::Span;
 use quote::quote;
 use std::vec::Vec;
-use syn::{punctuated::Punctuated, token::Paren, Type, TypeTuple};
+use syn::{punctuated::Punctuated, token::Paren, Pat, Type, TypeTuple};
 
 pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
     // Get only the unique states
@@ -39,6 +39,13 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
             None => {
                 quote! {
                     #value
+                }
+            }
+            //TODO other pat options
+            Some(Pat::Struct(t)) => {
+                let p = t.path.clone();
+                quote! {
+                    #value(#p)
                 }
             }
             Some(t) => {
@@ -78,11 +85,15 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
                 .iter()
                 .map(|(name, value)| {
                     let value = &value.event;
-
                     match sm.event_data_type.get(name) {
                         None => {
                             quote! {
                                 #value
+                            }
+                        }
+                        Some(Pat::Struct(p)) => {
+                            quote! {
+                                #value(ref mut event_data @ #p)
                             }
                         }
                         Some(_) => {
@@ -215,7 +226,7 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
                 };
                 let event_data = match sm.event_data_type.get(event) {
                     Some(et) => match et {
-                        Type::Reference(_) => {
+                        Pat::Wild(_) => {
                             quote! { event_data: #et }
                         }
                         _ => {
@@ -281,7 +292,7 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
                 };
                 let event_data = match sm.event_data_type.get(event) {
                     Some(et) => match et {
-                        Type::Reference(_) => {
+                        Pat::Wild(_) => {
                             quote! { event_data: #et }
                         }
                         _ => {
