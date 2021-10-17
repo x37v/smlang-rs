@@ -302,7 +302,12 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
                         Pat::Wild(_) => {
                             quote! { event_data: #et }
                         }
+                        Pat::Struct(s) => {
+                            let p = s.path.clone();
+                            quote! { event_data: &#p }
+                        }
                         _ => {
+                            println!("HERE EVENT DATA");
                             quote! { event_data: &#et }
                         }
                     },

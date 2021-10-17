@@ -21,8 +21,9 @@ pub enum Events {
 
 statemachine! {
     transitions: {
-        *State1 + Event1(MyEventData { index: 1, down: false }) = State3,
-        State1 + Event1(MyEventData { index: 42, down: false }) = State2,
+        *State1 + Event1(MyEventData { index: 1, down: false }) / action = State3,
+        State1 + Event1(MyEventData { index: 42, down: false }) / action = State2,
+        State3 + Event1(MyEventData { index: 42, down: true }) / action = State1,
         //State2 + Event1(MyEventData)  / action = State1
     }
 }
@@ -31,14 +32,12 @@ statemachine! {
 pub struct Context;
 
 impl StateMachineContext for Context {
-    /*
     fn action(&mut self, event_data: &MyEventData) {
         println!(
             "Got valid Event Data = {} {}",
             event_data.index, event_data.down
         );
     }
-    */
 }
 
 fn main() {
@@ -60,4 +59,10 @@ fn main() {
         down: false,
     }));
     assert!(result == Ok(&States::State3));
+
+    let result = sm.process_event(Events::Event1(MyEventData {
+        index: 42,
+        down: true,
+    }));
+    assert!(result == Ok(&States::State1));
 }
