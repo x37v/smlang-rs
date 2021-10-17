@@ -1,8 +1,8 @@
 use proc_macro2::Span;
 use std::collections::HashMap;
 use syn::{
-    braced, bracketed, parenthesized, parse, spanned::Spanned, token, GenericArgument, Ident,
-    Lifetime, Pat, PathArguments, Token, Type,
+    braced, bracketed, parenthesized, parse, spanned::Spanned, token, Ident, Lifetime, Pat, Token,
+    Type,
 };
 
 #[derive(Debug)]
@@ -32,6 +32,7 @@ pub struct EventMapping {
     pub guard: Option<Ident>,
     pub action: Option<Ident>,
     pub out_state: Ident,
+    pub event_data_type: Option<Pat>,
 }
 
 #[derive(Debug)]
@@ -112,7 +113,7 @@ impl ParsedStateMachine {
             } else if let Some(_) = state_data_type.get(&transition.event.to_string()) {
                 return Err(parse::Error::new(
                     transition.event.span(),
-                    "This event's type does not match its previous definition.",
+                    "1 This event's type does not match its previous definition.",
                 ));
             }
 
@@ -133,7 +134,7 @@ impl ParsedStateMachine {
             } else if let Some(_) = state_data_type.get(&transition.event.to_string()) {
                 return Err(parse::Error::new(
                     transition.event.span(),
-                    "This event's type does not match its previous definition.",
+                    "2 This event's type does not match its previous definition.",
                 ));
             }
 
@@ -141,6 +142,7 @@ impl ParsedStateMachine {
             events.insert(transition.event.to_string(), transition.event.clone());
 
             // Collect event to data mappings and check for definition errors
+            let key = format!("{} {:?}", transition.event, transition.event_data_type);
             if let Some(event_type) = transition.event_data_type.clone() {
                 match event_data_type.get(&transition.event.to_string()) {
                     None => {
@@ -172,7 +174,7 @@ impl ParsedStateMachine {
                             */
                             _ => (),
                         }
-                        event_data_type.insert(transition.event.to_string(), event_type);
+                        event_data_type.insert(key, event_type);
                         if !lifetimes.is_empty() {
                             event_data_lifetimes
                                 .insert(transition.event.to_string(), lifetimes.clone());
@@ -180,12 +182,14 @@ impl ParsedStateMachine {
                         all_event_data_lifetimes.append(&mut lifetimes);
                     }
                     Some(v) => {
+                        /*
                         if v != &event_type {
                             return Err(parse::Error::new(
                                 transition.event.span(),
                                 "This event's type does not match its previous definition.",
                             ));
                         }
+                        */
                     }
                 }
             } else if let Some(_) = event_data_type.get(&transition.event.to_string()) {
@@ -208,15 +212,18 @@ impl ParsedStateMachine {
                 .get_mut(&transition.in_state.to_string())
                 .unwrap();
 
-            if let None = p.get(&transition.event.to_string()) {
+            let key = format!("{} {:?}", transition.event, transition.event_data_type);
+            //let key = transition.event.to_string();
+            if let None = p.get(&key) {
                 let mapping = EventMapping {
+                    event_data_type: transition.event_data_type.clone(),
                     event: transition.event.clone(),
                     guard: transition.guard.clone(),
                     action: transition.action.clone(),
                     out_state: transition.out_state.clone(),
                 };
 
-                p.insert(transition.event.to_string(), mapping);
+                p.insert(key, mapping);
             } else {
                 return Err(parse::Error::new(
                     transition.in_state.span(),

@@ -13,10 +13,16 @@ pub struct MyEventData {
     pub down: bool,
 }
 
+#[derive(PartialEq)]
+#[allow(missing_docs)]
+pub enum Events {
+    Event1(MyEventData),
+}
+
 statemachine! {
     transitions: {
         *State1 + Event1(MyEventData { index: 1, down: false }) = State3,
-        //State1 + Event1(MyEventData { index: 42, ... }) / action = State2,
+        State1 + Event1(MyEventData { index: 42, down: false }) = State2,
         //State2 + Event1(MyEventData)  / action = State1
     }
 }

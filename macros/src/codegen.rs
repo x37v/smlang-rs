@@ -31,26 +31,32 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
     // Extract events
     let mut event_list: Vec<_> = sm.events.iter().map(|(_, value)| value).collect();
     event_list.sort_by(|a, b| a.to_string().cmp(&b.to_string()));
+    //println!("sm.events {:#?}", sm.events);
+    //println!("event_list {:#?}", event_list);
+    //println!("sm.event_data_type {:#?}", sm.event_data_type);
 
     // Extract events
     let event_list: Vec<_> = event_list
         .iter()
-        .map(|value| match sm.event_data_type.get(&value.to_string()) {
-            None => {
-                quote! {
-                    #value
+        .map(|value| {
+            let key = value.to_string();
+            match sm.event_data_type.get(&key) {
+                None => {
+                    quote! {
+                        #value
+                    }
                 }
-            }
-            //TODO other pat options
-            Some(Pat::Struct(t)) => {
-                let p = t.path.clone();
-                quote! {
-                    #value(#p)
+                //TODO other pat options
+                Some(Pat::Struct(t)) => {
+                    let p = t.path.clone();
+                    quote! {
+                        #value(#p)
+                    }
                 }
-            }
-            Some(t) => {
-                quote! {
-                    #value(#t)
+                Some(t) => {
+                    quote! {
+                        #value(#t)
+                    }
                 }
             }
         })
@@ -84,8 +90,9 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
             value
                 .iter()
                 .map(|(name, value)| {
+                    let key = format!("{} {:?}", value.event, value.event_data_type);
                     let value = &value.event;
-                    match sm.event_data_type.get(name) {
+                    match sm.event_data_type.get(&key) {
                         None => {
                             quote! {
                                 #value
@@ -420,10 +427,10 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
         #[derive(PartialEq)]
         pub enum States { #(#state_list),* }
 
-        /// List of auto-generated events.
-        #[allow(missing_docs)]
-        #[derive(PartialEq)]
-        #events_code_block
+        // /// List of auto-generated events.
+        // #[allow(missing_docs)]
+        // #[derive(PartialEq)]
+        // #events_code_block
 
         /// List of possible errors
         #[derive(Debug, Clone, Copy, PartialEq, Eq)]
