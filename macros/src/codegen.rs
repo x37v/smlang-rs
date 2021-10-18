@@ -303,11 +303,12 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
                             quote! { event_data: #et }
                         }
                         Pat::Struct(s) => {
-                            let p = s.path.clone();
+                            //how can we differentiate from Enum::Variant and crate::foo::Bar ?
+                            //for now, just always take the top of the path segment
+                            let p = s.path.segments[0].ident.clone();
                             quote! { event_data: &#p }
                         }
                         _ => {
-                            println!("HERE EVENT DATA");
                             quote! { event_data: &#et }
                         }
                     },

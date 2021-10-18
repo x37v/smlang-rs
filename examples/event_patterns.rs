@@ -1,17 +1,6 @@
 //! Event pattern example
 
-#![deny(missing_docs)]
-
 use smlang::statemachine;
-
-/// Event data
-#[derive(PartialEq)]
-pub struct MyEventData {
-    /// index of button?
-    pub index: usize,
-    /// button down?
-    pub down: bool,
-}
 
 /// Note event data
 #[derive(PartialEq)]
@@ -23,19 +12,26 @@ pub struct NoteEventData {
 }
 
 #[derive(PartialEq)]
+pub enum Button {
+    Shift { index: usize, down: bool },
+    Pad { index: usize, down: bool },
+}
+
+#[derive(PartialEq)]
 #[allow(missing_docs)]
 pub enum Events {
-    Event1(MyEventData),
+    ButtonEvent(Button),
     NoteEvent(NoteEventData),
 }
 
 statemachine! {
     transitions: {
-        *State1 + Event1(MyEventData { index: 1, down: false }) / action = State3,
-        State1 + Event1(MyEventData { index: 42, down: false }) / action = State2,
-        State3 + Event1(MyEventData { index: 42, down: true }) / action = State1,
-        State1 + NoteEvent(NoteEventData) [guard] = State5
-        //State2 + Event1(MyEventData)  / action = State1
+        *State1 + ButtonEvent(Button::Pad { index: 1, down: false }) / action = State3,
+        State1 + ButtonEvent(Button::Pad { index: 42, down: false }) / action = State2,
+        State3 + ButtonEvent(Button::Pad { index: 42, down: true }) / action = State1,
+        State1 + NoteEvent(NoteEventData) [guard] = State5,
+        State1 + ButtonEvent(Button::Shift{index: 1, down: true}) = State5
+        //State2 + ButtonEvent(Button::Pad)  / action = State1
     }
 }
 
@@ -43,11 +39,12 @@ statemachine! {
 pub struct Context;
 
 impl StateMachineContext for Context {
-    fn action(&mut self, event_data: &MyEventData) {
-        println!(
-            "Got valid Event Data = {} {}",
-            event_data.index, event_data.down
-        );
+    fn action(&mut self, event_data: &Button) {
+        let (index, down) = match event_data {
+            Button::Shift { index, down } => (index, down),
+            Button::Pad { index, down } => (index, down),
+        };
+        println!("Got valid Button = {} {}", index, down);
     }
     fn guard(&mut self, event_data: &NoteEventData) -> Result<(), ()> {
         Ok(())
@@ -56,25 +53,25 @@ impl StateMachineContext for Context {
 
 fn main() {
     let mut sm = StateMachine::new(Context);
-    let result = sm.process_event(Events::Event1(MyEventData {
+    let result = sm.process_event(Events::ButtonEvent(Button::Pad {
         index: 1,
         down: true,
     }));
     assert!(result == Err(Error::InvalidEvent));
 
-    let result = sm.process_event(Events::Event1(MyEventData {
+    let result = sm.process_event(Events::ButtonEvent(Button::Pad {
         index: 2084,
         down: false,
     }));
     assert!(result == Err(Error::InvalidEvent));
 
-    let result = sm.process_event(Events::Event1(MyEventData {
+    let result = sm.process_event(Events::ButtonEvent(Button::Pad {
         index: 1,
         down: false,
     }));
     assert!(result == Ok(&States::State3));
 
-    let result = sm.process_event(Events::Event1(MyEventData {
+    let result = sm.process_event(Events::ButtonEvent(Button::Pad {
         index: 42,
         down: true,
     }));
