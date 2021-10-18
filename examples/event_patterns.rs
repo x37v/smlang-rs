@@ -13,10 +13,20 @@ pub struct MyEventData {
     pub down: bool,
 }
 
+/// Note event data
+#[derive(PartialEq)]
+pub struct NoteEventData {
+    /// num
+    pub num: u8,
+    /// vel
+    pub vel: u8,
+}
+
 #[derive(PartialEq)]
 #[allow(missing_docs)]
 pub enum Events {
     Event1(MyEventData),
+    NoteEvent(NoteEventData),
 }
 
 statemachine! {
@@ -24,6 +34,7 @@ statemachine! {
         *State1 + Event1(MyEventData { index: 1, down: false }) / action = State3,
         State1 + Event1(MyEventData { index: 42, down: false }) / action = State2,
         State3 + Event1(MyEventData { index: 42, down: true }) / action = State1,
+        State1 + NoteEvent(NoteEventData) [guard] = State5
         //State2 + Event1(MyEventData)  / action = State1
     }
 }
@@ -37,6 +48,9 @@ impl StateMachineContext for Context {
             "Got valid Event Data = {} {}",
             event_data.index, event_data.down
         );
+    }
+    fn guard(&mut self, event_data: &NoteEventData) -> Result<(), ()> {
+        Ok(())
     }
 }
 
