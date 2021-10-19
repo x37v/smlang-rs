@@ -26,7 +26,7 @@ pub enum Events {
 
 statemachine! {
     transitions: {
-        *State1 + ButtonEvent(Button::Pad { index: 1, down: false }) / action = State3,
+        *State1 + ButtonEvent(Button::Pad { index: 1, .. }) / action = State3,
         State1 + ButtonEvent(Button::Pad { index: 42, down: false }) / action = State2,
         State3 + ButtonEvent(Button::Pad { index: 42, down: true }) / action = State1,
         State1 + NoteEvent(NoteEventData) [guard] = State5,
@@ -54,7 +54,7 @@ impl StateMachineContext for Context {
 fn main() {
     let mut sm = StateMachine::new(Context);
     let result = sm.process_event(Events::ButtonEvent(Button::Pad {
-        index: 1,
+        index: 2,
         down: true,
     }));
     assert!(result == Err(Error::InvalidEvent));
