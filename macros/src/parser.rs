@@ -1,8 +1,6 @@
 use proc_macro2::Span;
 use std::collections::HashMap;
-use syn::{
-    braced, bracketed, parenthesized, parse, token, Block, Expr, Ident, Pat, Token, Variant,
-};
+use syn::{braced, bracketed, parenthesized, parse, token, Expr, Ident, Pat, Stmt, Token, Variant};
 
 #[derive(Debug)]
 pub struct StateMachine {
@@ -108,7 +106,7 @@ pub struct StateTransition {
     pub out_state: Ident,
     pub out_state_data_expr: Option<Expr>,
     pub guard: Option<Expr>,
-    pub actions: Option<Block>,
+    pub actions: Option<Stmt>,
 }
 
 impl parse::Parse for StateTransition {
@@ -147,7 +145,7 @@ impl parse::Parse for StateTransition {
         };
 
         // Possible action
-        let actions: Option<Block> = if let Ok(_) = input.parse::<Token![/]>() {
+        let actions: Option<Stmt> = if let Ok(_) = input.parse::<Token![/]>() {
             Some(input.parse()?)
         } else {
             None

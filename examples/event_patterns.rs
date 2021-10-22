@@ -28,7 +28,7 @@ pub struct Context;
 
 statemachine! {
    transitions: {
-        *State1 + ButtonEvent(Button { down: true, .. }) / {ctx.action(event_data)} = State2,
+        *State1 + ButtonEvent(Button { down: true, .. }) / ctx.action(event_data); = State2,
         State1 + ButtonEvent(Button { .. }) [!event_data.down] / {ctx.action(event_data)} = State3(2),
         State1 + FooEvent("blah") = State3(30),
         State3(usize) + ButtonEvent(Button { down: true, ..}) [event_data.index == 20 && *state_data < 20]
