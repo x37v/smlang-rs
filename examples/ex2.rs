@@ -7,6 +7,16 @@
 
 use smlang::statemachine;
 
+///Events
+pub enum Events {
+    ///1
+    Event1,
+    ///2
+    Event2,
+    ///3
+    Event3,
+}
+
 statemachine! {
     transitions: {
         *State1 + Event1 = State2,
@@ -18,30 +28,28 @@ statemachine! {
 /// Context
 pub struct Context;
 
-impl StateMachineContext for Context {}
-
 fn main() {
     let mut sm = StateMachine::new(Context);
     assert!(sm.state() == &States::State1);
 
     let r = sm.process_event(Events::Event1);
-    assert!(r == Ok(&States::State2));
+    assert!(r == Some(&States::State2));
 
     let r = sm.process_event(Events::Event2);
-    assert!(r == Ok(&States::State3));
+    assert!(r == Some(&States::State3));
 
     // Go back in the loop a few time
     let r = sm.process_event(Events::Event3);
-    assert!(r == Ok(&States::State2));
+    assert!(r == Some(&States::State2));
 
     let r = sm.process_event(Events::Event2);
-    assert!(r == Ok(&States::State3));
+    assert!(r == Some(&States::State3));
 
     let r = sm.process_event(Events::Event3);
-    assert!(r == Ok(&States::State2));
+    assert!(r == Some(&States::State2));
 
     // Now we cannot use Event1 again, as it is outside the state machine loop
     let r = sm.process_event(Events::Event1);
-    assert!(r == Err(Error::InvalidEvent));
+    assert!(r == None);
     assert!(sm.state() == &States::State2);
 }

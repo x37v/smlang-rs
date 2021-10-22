@@ -6,10 +6,18 @@
 
 use smlang::statemachine;
 
+/// my events
+pub enum Events {
+    /// 1
+    Event1,
+    /// 2
+    Event2,
+}
+
 statemachine! {
     transitions: {
-        *State1 + Event1 / count_transition1 = State2,
-        State2 + Event2 / count_transition2 = State1,
+        *State1 + Event1 / ctx.count_transition1(); = State2,
+        State2 + Event2 / ctx.count_transition2(); = State1,
     }
 }
 
@@ -19,7 +27,7 @@ pub struct Context {
     pub num_transitions: usize,
 }
 
-impl StateMachineContext for Context {
+impl Context {
     fn count_transition1(&mut self) {
         self.num_transitions += 1;
     }
@@ -32,9 +40,9 @@ impl StateMachineContext for Context {
 fn main() {
     let mut sm = StateMachine::new(Context { num_transitions: 0 });
 
-    sm.process_event(Events::Event1).ok(); // ++
-    sm.process_event(Events::Event1).ok(); // Will fail
-    sm.process_event(Events::Event2).ok(); // ++
+    assert!(sm.process_event(Events::Event1).is_some()); // ++
+    assert!(sm.process_event(Events::Event1).is_none()); // Will fail
+    assert!(sm.process_event(Events::Event2).is_some()); // ++
 
     assert_eq!(sm.context().num_transitions, 2);
 

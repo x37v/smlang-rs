@@ -35,7 +35,7 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
                     let eident = t.event.clone();
                     let pat = t.event_pattern.map(|p| {
                         quote! {
-                            (ref event_data @ #p)
+                            (ref mut event_data @ #p)
                         }
                     });
                     let guard = t.guard.map(|a| {
@@ -64,7 +64,7 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
             quote! {
                 States::#sident #sdata => {
                     let mut ctx = &mut self.context;
-                    match &event {
+                    match &mut event {
                         #(#events),*
                         _ => None
                     }

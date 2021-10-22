@@ -2,6 +2,7 @@
 //!
 //! An example of using guards and actions with state and event data.
 
+/*
 #![deny(missing_docs)]
 
 use smlang::statemachine;
@@ -65,4 +66,9 @@ fn main() {
 
     assert!(r == &States::State2(MyStateData(1)));
     assert_eq!(val, 2);
+}
+*/
+
+fn main() {
+    //TODO?
 }

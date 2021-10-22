@@ -2,6 +2,7 @@
 //!
 //! An example of using guards and actions with state and event data.
 
+/*
 #![deny(missing_docs)]
 
 use smlang::statemachine;
@@ -46,5 +47,8 @@ impl StateMachineContext for Context {
         todo!()
     }
 }
+*/
 
-fn main() {}
+fn main() {
+    //TODO?
+}

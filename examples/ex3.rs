@@ -7,33 +7,43 @@
 
 use smlang::statemachine;
 
+///Events
+pub enum Events {
+    ///1
+    Event1,
+    ///2
+    Event2,
+    ///3
+    Event3,
+}
+
 statemachine! {
     transitions: {
-        *State1 + Event1 [guard] / action1 = State2,
-        State2 + Event2 [guard_fail] / action2 = State3,
+        *State1 + Event1 [ctx.guard()] / ctx.action1(); = State2,
+        State2 + Event2 [ctx.guard_fail()] / ctx.action2(); = State3,
     }
 }
 
 /// Context
 pub struct Context;
 
-impl StateMachineContext for Context {
-    fn guard(&mut self) -> Result<(), ()> {
+impl Context {
+    fn guard(&mut self) -> bool {
         // Always ok
-        Ok(())
+        true
     }
 
-    fn guard_fail(&mut self) -> Result<(), ()> {
+    fn guard_fail(&mut self) -> bool {
         // Always fail
-        Err(())
+        false
     }
 
     fn action1(&mut self) {
-        //println!("Action 1");
+        println!("Action 1");
     }
 
     fn action2(&mut self) {
-        //println!("Action 1");
+        println!("Action 1");
     }
 }
 
@@ -45,7 +55,7 @@ fn main() {
 
     // Go through the first guard and action
     let r = sm.process_event(Events::Event1);
-    assert!(r == Ok(&States::State2));
+    assert!(r == Some(&States::State2));
 
     println!("After action 1");
 
@@ -53,7 +63,7 @@ fn main() {
 
     // The action will never run as the guard will fail
     let r = sm.process_event(Events::Event2);
-    assert!(r == Err(Error::GuardFailed(())));
+    assert!(r.is_none());
 
     println!("After action 2");
 
