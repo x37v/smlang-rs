@@ -63,7 +63,6 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
 
             quote! {
                 States::#sident #sdata => {
-                    let mut ctx = &mut self.context;
                     match &mut event {
                         #(#events),*
                         _ => None
@@ -131,6 +130,7 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
             /// if there was no transition.
             #[allow(unused)]
             pub fn process_event(&mut self, mut event: Events) -> Option<&States> {
+                let mut ctx = &mut self.context;
                 match self.state {
                     #(#transitions)*
                     _ => None,
