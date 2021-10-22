@@ -15,14 +15,14 @@ The DSL is defined as follows:
 ```rust
 statemachine!{
     transitions: {
-        *SrcState1 + Event1 [ ctx.guard1() ] / ctx.action1(); = DstState2, // * denotes starting state
-        SrcState2 + Event2(_) [ ctx.guard2(event_data) ] / { ctx.action2(event_data) } = DstState1,
+        *SrcState1 + Event1 [ guard() ] / action(); = DstState2, // * denotes starting state
+        SrcState2 + Event2(_) [ ctx.guard2(event_data) ] / { ctx.action2(event_data); println!("{}", event_data) } = DstState1,
     }
     // ...
 }
 ```
 
-Where `[ ctx.guard() ]` and `ctx.action1();` are optional and can be left out. A `guard` is a function which returns `true` if the state transition should happen, and `false` if the transition should not happen, while `action` are functions that are run during the transition which are guaranteed to finish before entering the new state.
+Where `[ guard() ]` and `/ action();` are optional and can be left out. A `guard` is a function which returns `true` if the state transition should happen, and `false` if the transition should not happen, while `actions` are code that run during the transition which are guaranteed to finish before entering the new state.
 
 > This implies that any state machine must be written as a list of transitions.
 
@@ -34,7 +34,7 @@ This is simply a struct that you define called `Context`. You can access the con
 ```rust
 statemachine!{
     transitions: {
-        State1 + Event1 [ctx.guard()] / ctx.action; = State2,
+        State1 + Event1 [ctx.guard()] / ctx.action(); = State2,
     }
     // ...
 }
