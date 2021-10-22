@@ -15,33 +15,43 @@ The DSL is defined as follows:
 ```rust
 statemachine!{
     transitions: {
-        *SrcState1 + Event1 [ guard1 ] / action1 = DstState2, // * denotes starting state
-        SrcState2 + Event2 [ guard2 ] / action2 = DstState1,
+        *SrcState1 + Event1 [ ctx.guard1() ] / ctx.action1(); = DstState2, // * denotes starting state
+        SrcState2 + Event2(_) [ ctx.guard2(event_data) ] / { ctx.action2(event_data) } = DstState1,
     }
     // ...
 }
 ```
 
-Where `guard` and `action` are optional and can be left out. A `guard` is a function which returns `true` if the state transition should happen, and `false`  if the transition should not happen, while `action` are functions that are run during the transition which are guaranteed to finish before entering the new state.
+Where `[ ctx.guard() ]` and `ctx.action1();` are optional and can be left out. A `guard` is a function which returns `true` if the state transition should happen, and `false` if the transition should not happen, while `action` are functions that are run during the transition which are guaranteed to finish before entering the new state.
 
 > This implies that any state machine must be written as a list of transitions.
 
 ### State machine context
 
 The state machine needs a context to be defined.
-The `StateMachineContext` is generated from the `statemachine!` proc-macro and is what implements guards and actions, and data that is available in all states within the state machine and persists between state transitions:
+This is simply a struct that you define called `Context`. You can access the context via the variable `ctx` in your guards and actions.
 
 ```rust
 statemachine!{
     transitions: {
-        State1 + Event1 = State2,
+        State1 + Event1 [ctx.guard()] / ctx.action; = State2,
     }
     // ...
 }
 
 pub struct Context;
+pub enum Events {
+  Event1
+}
 
-impl StateMachineContext for Context {}
+impl Context {
+  pub fn guard(&self) -> bool {
+    true
+  }
+  pub fn action(&self) {
+    //TODO
+  }
+}
 
 fn main() {
     let mut sm = StateMachine::new(Context);
@@ -52,16 +62,24 @@ fn main() {
 
 See example `examples/context.rs` for a usage example.
 
+### States
+
+An enum `States` is automatically generated based on the entries in your DSL.
+One note is that at the time of this writing there is no way to specify a terminal state with data.
+
 ### State data
 
 Any state may have some data associated with it (except the starting state), which means that this data is only exists while in this state.
+You can access the state data in your actions and guards via the variable `state_data`.
+You can also set the destination state value via an expression.
 
 ```rust
 pub struct MyStateData(pub u32);
 
 statemachine!{
     transitions: {
-        State1(MyStateData) + Event1 = State2,
+        *State1(MyStateData) + Event2 [state_data.0 == 42] = State1(MyStateData(2084)),
+        State1(MyStateData) + Event1 = State1(context.process(state_data)),
     }
     // ...
 }
@@ -69,30 +87,44 @@ statemachine!{
 
 See example `examples/state_with_data.rs` for a usage example.
 
+### Events
+
+You must define an enum named `Events` that encapsulates the events you wish to use.
+Any Event you supply in the DSL will be prefixed with `Events` to create valid Rust code.
+
 ### Event data
 
-Data may be passed along with an event into the `guard` and `action`:
+Data may be passed along with an event into the `guard` and `action`, it is accessed via the `event_data` variable:
 
 ```rust
 pub struct MyEventData(pub u32);
 
+pub enum Events {
+    Event1(MyEventData),
+}
+
 statemachine!{
     transitions: {
-        State1 + Event1(MyEventData) [guard] = State2,
+        State1 + Event1(_) [ctx.guard(event_data)] = State2,
     }
     // ...
 }
 ```
 
-Event data may also have associated lifetimes which the `statemachine!` macro will pick up and add the `Events` structure. This means the following will also work:
+Event data may also have associated lifetimes. This means the following will also work:
 
 ```rust
-pub struct MyEventData<'a>(pub &'a u32);
+pub struct MyReferenceWrapper<'a>(pub &'a u32);
+
+pub enum Events<'a, 'b> {
+    Event1(&'a [u8]),
+    Event2(MyReferenceWrapper<'b>),
+}
 
 statemachine!{
     transitions: {
-        State1 + Event1(MyEventData<'a>) [guard1] = State2,
-        State1 + Event2(&'a [u8]) [guard2] = State3,
+        State1 + Event2(_) [ctx.guard1(event_data)] = State2,
+        State1 + Event1(_) [ctx.guard2(event_data)] = State3,
     }
     // ...
 }
@@ -152,7 +184,8 @@ DSL implementation:
 ```rust
 statemachine!{
     transitions: {
-        *State1 + Event1 [guard] / action = State2,
+        *State1 + Event1 [ctx.guard()] / ctx.action1(); = State2,
+        State2 + Event2 [ctx.guard_fail()] / ctx.action2(); = State3,
     }
 }
 ```
@@ -165,6 +198,7 @@ List of contributors in alphabetical order:
 
 * Emil Fresk ([@korken89](https://github.com/korken89))
 * Mathias Koch ([@MathiasKoch](https://github.com/MathiasKoch))
+* Alex Norman ([@x37v](https://github.com/x37v))
 
 ---
 
