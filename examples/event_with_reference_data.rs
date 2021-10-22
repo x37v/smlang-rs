@@ -5,7 +5,7 @@
 use smlang::statemachine;
 
 /// Reference wrapper
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(PartialEq, Debug)]
 pub struct MyReferenceWrapper<'a>(pub &'a u32);
 
 pub enum Events<'a, 'b> {
