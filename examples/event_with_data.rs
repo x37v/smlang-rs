@@ -10,9 +10,15 @@ use smlang::statemachine;
 #[derive(PartialEq)]
 pub struct MyEventData(pub u32);
 
+/// Events enum
+pub enum Events {
+    /// First event
+    Event1(MyEventData),
+}
+
 statemachine! {
     transitions: {
-        *State1 + Event1(MyEventData) [guard] / action = State2,
+        *State1 + Event1(_) [event_data == &MyEventData(42)] / ctx.action(event_data); = State2,
         // ...
     }
 }
@@ -20,15 +26,8 @@ statemachine! {
 /// Context
 pub struct Context;
 
-impl StateMachineContext for Context {
-    fn guard(&mut self, event_data: &MyEventData) -> Result<(), ()> {
-        if event_data == &MyEventData(42) {
-            Ok(())
-        } else {
-            Err(())
-        }
-    }
-
+impl Context {
+    /// react to event data
     fn action(&mut self, event_data: &MyEventData) {
         println!("Got valid Event Data = {}", event_data.0);
     }
@@ -38,7 +37,7 @@ fn main() {
     let mut sm = StateMachine::new(Context);
     let result = sm.process_event(Events::Event1(MyEventData(1))); // Guard will fail
 
-    assert!(result == Err(Error::GuardFailed(())));
+    assert!(result == Err(Error::InvalidEvent));
 
     let result = sm.process_event(Events::Event1(MyEventData(42))); // Guard will pass
 
