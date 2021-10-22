@@ -1,8 +1,7 @@
 use proc_macro2::Span;
 use std::collections::HashMap;
 use syn::{
-    braced, bracketed, parenthesized, parse, spanned::Spanned, token, Block, Expr, Ident, Lifetime,
-    Pat, Stmt, Token, Type, Variant,
+    braced, bracketed, parenthesized, parse, token, Block, Expr, Ident, Pat, Token, Variant,
 };
 
 #[derive(Debug)]

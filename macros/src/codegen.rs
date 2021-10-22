@@ -2,10 +2,9 @@
 
 use crate::parser::*;
 use proc_macro2;
-use proc_macro2::Span;
 use quote::quote;
 use std::vec::Vec;
-use syn::{punctuated::Punctuated, token::Paren, Arm, Fields, Pat, Type, TypeTuple};
+use syn::Fields;
 
 pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
     let mut state_list: Vec<_> = sm.states.iter().map(|(_, value)| value).collect();
