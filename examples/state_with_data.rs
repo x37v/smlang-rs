@@ -23,7 +23,7 @@ pub enum Events {
 statemachine! {
     transitions: {
         *State1 + Event1 = State2(MyStateData(42)),
-        State2(MyStateData) + Event2 = State1,
+        State2(MyStateData) + Event2 [state_data.0 == 42] = State1,
         // ...
     }
 }
