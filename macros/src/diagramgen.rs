@@ -1,4 +1,5 @@
 use crate::parser::*;
+use quote::quote;
 
 fn escape(v: String) -> String {
     let mut out = v.clone();
@@ -18,24 +19,43 @@ pub fn generate_diagram(sm: &ParsedStateMachine) -> String {
     let mut diagram_transitions = vec![];
     for (state, events) in mapping {
         for eventmapping in events {
-            diagram_events.push((
+            let e = (
                 eventmapping.event.to_string(),
                 eventmapping
                     .guard
                     .as_ref()
-                    .map(|i| escape(format!("{:?}", i)))
+                    .map(|i| escape(quote! {#i}.to_string()))
                     .unwrap_or_else(|| "_".to_string()),
                 eventmapping
                     .actions
                     .as_ref()
-                    .map(|i| escape(format!("{:?}", i)))
+                    .map(|i| escape(quote! {#i}.to_string()))
                     .unwrap_or_else(|| "_".to_string()),
-            ));
+            );
+            let mut label = e.0.clone();
+
+            if let Some(p) = &eventmapping.event_pattern {
+                label += format!("({})", escape(quote! {#p}.to_string())).as_str();
+            };
+
+            if let Some(guard) = &eventmapping.guard {
+                label += format!("[{}]", escape(quote! {#guard}.to_string())).as_str();
+            };
+
+            if let Some(actions) = &eventmapping.actions {
+                label += format!(" / {}", escape(quote! {#actions}.to_string())).as_str();
+            };
+            if let Some(e) = &eventmapping.out_state_data_expr {
+                let s = &eventmapping.out_state;
+                label += format!(" -> {}", escape(quote! {#s(#e)}.to_string())).as_str();
+            };
+
             diagram_transitions.push((
                 state,
                 eventmapping.out_state.to_string(),
-                eventmapping.event.to_string(),
+                format!("\"{}\"", label),
             ));
+            diagram_events.push(e);
         }
     }
 
