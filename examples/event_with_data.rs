@@ -37,9 +37,9 @@ fn main() {
     let mut sm = StateMachine::new(Context);
     let result = sm.process_event(Events::Event1(MyEventData(1))); // Guard will fail
 
-    assert!(result == Err(Error::InvalidEvent));
+    assert!(result == None);
 
     let result = sm.process_event(Events::Event1(MyEventData(42))); // Guard will pass
 
-    assert!(result == Ok(&States::State2));
+    assert!(result == Some(&States::State2));
 }

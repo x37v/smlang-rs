@@ -61,32 +61,32 @@ fn main() {
         down: false,
     }));
 
-    assert_eq!(Ok(&States::State3(2)), result);
+    assert_eq!(Some(&States::State3(2)), result);
 
     let result = sm.process_event(Events::FooEvent(&"blah"));
-    assert_eq!(Err(Error::InvalidEvent), result);
+    assert_eq!(None, result);
 
     let result = sm.process_event(Events::ButtonEvent(Button {
         index: 0,
         down: false,
     }));
-    assert_eq!(Ok(&States::State3(3)), result);
+    assert_eq!(Some(&States::State3(3)), result);
 
     let result = sm.process_event(Events::ButtonEvent(Button {
         index: 0,
         down: false,
     }));
-    assert_eq!(Ok(&States::State3(4)), result);
+    assert_eq!(Some(&States::State3(4)), result);
 
     let result = sm.process_event(Events::ButtonEvent(Button {
         index: 0,
         down: true,
     }));
-    assert_eq!(Err(Error::InvalidEvent), result);
+    assert_eq!(None, result);
 
     let result = sm.process_event(Events::ButtonEvent(Button {
         index: 20,
         down: true,
     }));
-    assert_eq!(Ok(&States::State3(2084)), result);
+    assert_eq!(Some(&States::State3(2084)), result);
 }

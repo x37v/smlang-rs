@@ -55,7 +55,7 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
                         Events:: #eident #pat #guard => {
                             #actions;
                             self.state = States::#out_state #out_state_data_expr;
-                            Ok(&self.state)
+                            Some(&self.state)
                         }
                     }
                 })
@@ -66,7 +66,7 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
                     let mut ctx = &mut self.context;
                     match &event {
                         #(#events),*
-                        _ => Err(Error::InvalidEvent)
+                        _ => None
                     }
                 }
             }
@@ -86,13 +86,6 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
         pub struct StateMachine {
             state: States,
             context: Context
-        }
-
-        #[derive(Debug, PartialEq)]
-        /// Errors processing events
-        pub enum Error {
-            /// The event didn't trigger a transition
-            InvalidEvent
         }
 
         impl StateMachine {
@@ -134,13 +127,13 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
 
             /// Process an event.
             ///
-            /// It will return `Ok(&NextState)` if the transition was successful, or `Err(Error)`
-            /// if there was an error in the transition.
+            /// It will return `Some(&NextState)` if the transition was successful, or `None`
+            /// if there was no transition.
             #[allow(unused)]
-            pub fn process_event(&mut self, mut event: Events) -> Result<&States, Error> {
+            pub fn process_event(&mut self, mut event: Events) -> Option<&States> {
                 match self.state {
                     #(#transitions)*
-                    _ => Err(Error::InvalidEvent),
+                    _ => None,
                 }
             }
         }
