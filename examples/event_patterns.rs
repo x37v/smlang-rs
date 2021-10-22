@@ -19,7 +19,8 @@ pub struct Button {
 pub enum Events {
     ButtonEvent(Button),
     NoteEvent(NoteEventData),
-    FooEvent,
+    FooEvent(&'static str),
+    BarEvent(usize),
 }
 
 /// Context
@@ -27,16 +28,17 @@ pub struct Context;
 
 statemachine! {
    transitions: {
-        *State1 + ButtonEvent(Button { .. }) [event_data.down] / {ctx.action(event_data)} = State2,
+        *State1 + ButtonEvent(Button { down: true, .. }) / {ctx.action(event_data)} = State2,
         State1 + ButtonEvent(Button { .. }) [!event_data.down] / {ctx.action(event_data)} = State3(2),
-        State1 + FooEvent = State3(30),
+        State1 + FooEvent("blah") = State3(30),
         State3(usize) + ButtonEvent(Button { down: true, ..}) [event_data.index == 20 && state_data < 20]
             / { ctx.action(event_data); println!("foo {}", state_data) } = State3(ctx.action2(state_data, event_data)),
         State3(usize) + ButtonEvent(Button { down: false, ..}) = State3(state_data + 1),
 
         //can't express State3(0) + FooEvent = State1 but can use a guard
-        State3(usize) + FooEvent [state_data == 0] = State1,
-        State5(NoteEventData) + FooEvent [state_data.num == 0] = State1,
+        State3(usize) + FooEvent("blah") [state_data == 0] = State1,
+        State5(NoteEventData) + FooEvent("blah") [state_data.num == 0] = State1,
+        State5(NoteEventData) + BarEvent(0) = State1,
    }
 }
 
@@ -59,7 +61,7 @@ fn main() {
     }));
     assert_eq!(Ok(&States::State3(2)), result);
 
-    let result = sm.process_event(Events::FooEvent);
+    let result = sm.process_event(Events::FooEvent(&"blah"));
     assert_eq!(Err(Error::InvalidEvent), result);
 
     let result = sm.process_event(Events::ButtonEvent(Button {
