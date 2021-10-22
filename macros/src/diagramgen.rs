@@ -2,24 +2,24 @@ use crate::parser::*;
 
 /// Generates a string containing 'dot' syntax to generate a statemachine diagram with graphviz.
 pub fn generate_diagram(sm: &ParsedStateMachine) -> String {
-    let transitions = &sm.states_events_mapping;
+    let mapping = &sm.states_events_mapping;
 
     let diagram_states = sm.states.iter().map(|s| s.0);
     let mut diagram_events = vec![];
     let mut diagram_transitions = vec![];
-    for (state, event) in transitions {
-        for (_event, eventmapping) in event {
+    for (state, events) in mapping {
+        for eventmapping in events {
             diagram_events.push((
                 eventmapping.event.to_string(),
                 eventmapping
                     .guard
                     .as_ref()
-                    .map(|i| i.to_string())
+                    .map(|i| format!("{:?}", i))
                     .unwrap_or_else(|| "_".to_string()),
                 eventmapping
-                    .action
+                    .actions
                     .as_ref()
-                    .map(|i| i.to_string())
+                    .map(|i| format!("{:?}", i))
                     .unwrap_or_else(|| "_".to_string()),
             ));
             diagram_transitions.push((
@@ -66,7 +66,7 @@ pub fn generate_diagram(sm: &ParsedStateMachine) -> String {
 
 {}
 }}",
-        sm.starting_state.to_string(),
+        sm.starting_state.ident,
         state_string.join("\n"),
         event_string.join("\n"),
         transition_string.join("\n")

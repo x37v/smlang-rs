@@ -20,7 +20,6 @@ pub fn statemachine(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     match parser::ParsedStateMachine::new(input) {
         // Generate code and hand the output tokens back to the compiler
         Ok(sm) => {
-            /*
             #[cfg(feature = "graphviz")]
             {
                 use std::io::Write;
@@ -51,7 +50,6 @@ pub fn statemachine(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     Err(_) => panic!("'dot' failed to run. Are you sure graphviz is installed?"),
                 }
             }
-            */
 
             codegen::generate_code(&sm).into()
         }
