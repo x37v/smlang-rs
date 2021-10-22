@@ -24,7 +24,7 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
             //see if we should capture state data
             let sdata: Option<proc_macro2::TokenStream> = match state.fields {
                 Fields::Unit => None,
-                _ => Some(quote! { (state_data) }),
+                _ => Some(quote! { (ref state_data) }),
             };
 
             //create the event matches
@@ -63,7 +63,7 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
 
             quote! {
                 States::#sident #sdata => {
-                    let mut ctx = self.context_mut();
+                    let mut ctx = &mut self.context;
                     match &event {
                         #(#events),*
                         _ => Err(Error::InvalidEvent)
@@ -78,7 +78,7 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
 
         /// List of auto-generated states.
         #[allow(missing_docs)]
-        #[derive(PartialEq, Clone, Debug)]
+        #[derive(PartialEq, Debug)]
         pub enum States { #(#state_list),* }
 
 
