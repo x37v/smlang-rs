@@ -1,5 +1,14 @@
 use crate::parser::*;
 
+fn escape(v: String) -> String {
+    let mut out = v.clone();
+    for c in ["(", ")", "|", "[", "]", "{", "}"].iter() {
+        out = out.replace(c, format!("\\{}", c).as_str());
+    }
+    out = out.replace("\"", "\\\"");
+    out
+}
+
 /// Generates a string containing 'dot' syntax to generate a statemachine diagram with graphviz.
 pub fn generate_diagram(sm: &ParsedStateMachine) -> String {
     let mapping = &sm.states_events_mapping;
@@ -14,12 +23,12 @@ pub fn generate_diagram(sm: &ParsedStateMachine) -> String {
                 eventmapping
                     .guard
                     .as_ref()
-                    .map(|i| format!("{:?}", i))
+                    .map(|i| escape(format!("{:?}", i)))
                     .unwrap_or_else(|| "_".to_string()),
                 eventmapping
                     .actions
                     .as_ref()
-                    .map(|i| format!("{:?}", i))
+                    .map(|i| escape(format!("{:?}", i)))
                     .unwrap_or_else(|| "_".to_string()),
             ));
             diagram_transitions.push((
