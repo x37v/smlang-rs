@@ -2,6 +2,7 @@
 
 use smlang::statemachine;
 
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct NoteEventData {
     /// num
     pub num: u8,
@@ -34,7 +35,8 @@ statemachine! {
         State3(usize) + ButtonEvent(Button { down: false, ..}) = State3(state_data + 1),
 
         //can't express State3(0) + FooEvent = State1 but can use a guard
-        State3(usize) + FooEvent [state_data == 0] = State1
+        State3(usize) + FooEvent [state_data == 0] = State1,
+        State5(NoteEventData) + FooEvent [state_data.num == 0] = State1,
    }
 }
 
