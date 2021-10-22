@@ -89,7 +89,9 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
         }
 
         #[derive(Debug, PartialEq)]
+        /// Errors processing events
         pub enum Error {
+            /// The event didn't trigger a transition
             InvalidEvent
         }
 
@@ -134,6 +136,7 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
             ///
             /// It will return `Ok(&NextState)` if the transition was successful, or `Err(Error)`
             /// if there was an error in the transition.
+            #[allow(unused)]
             pub fn process_event(&mut self, mut event: Events) -> Result<&States, Error> {
                 match self.state {
                     #(#transitions)*
