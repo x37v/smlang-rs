@@ -10,7 +10,11 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
     let mut state_list: Vec<_> = sm.states.iter().map(|(_, value)| value).collect();
     state_list.sort_by(|a, b| a.ident.to_string().cmp(&b.ident.to_string()));
 
-    let starting_state = &sm.starting_state;
+    let i = sm.starting_state.ident.clone();
+    let starting_state = match sm.starting_state.fields {
+        Fields::Unit => quote! { #i },
+        _ => quote! { #i(Default::default()) },
+    };
 
     let transitions: Vec<proc_macro2::TokenStream> = sm
         .states_events_mapping
@@ -80,6 +84,12 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
         #[derive(PartialEq, Debug)]
         pub enum States { #(#state_list),* }
 
+        impl Default for States {
+            fn default() -> Self {
+                Self::#starting_state
+            }
+        }
+
 
         /// State machine structure definition.
         pub struct StateMachine {
@@ -91,10 +101,7 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
             /// Creates a new state machine with the specified starting state.
             #[inline(always)]
             pub fn new(context: Context) -> Self {
-                StateMachine {
-                    state: States::#starting_state,
-                    context
-                }
+                Self::new_with_state(context, Default::default())
             }
 
             /// Creates a new state machine with an initial state.
