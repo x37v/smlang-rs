@@ -1,5 +1,6 @@
 use crate::parser::*;
 use quote::quote;
+use std::collections::VecDeque;
 
 fn escape(v: String) -> String {
     let mut out = v.clone();
@@ -15,24 +16,12 @@ pub fn generate_diagram(sm: &ParsedStateMachine) -> String {
     let mapping = &sm.states_events_mapping;
 
     let diagram_states = sm.states.iter().map(|s| s.0);
-    let mut diagram_events = vec![];
+    let mut diagram_events = VecDeque::new();
     let mut diagram_transitions = vec![];
+    let mut index = 1;
     for (state, events) in mapping {
         for eventmapping in events {
-            let e = (
-                eventmapping.event.to_string(),
-                eventmapping
-                    .guard
-                    .as_ref()
-                    .map(|i| escape(quote! {#i}.to_string()))
-                    .unwrap_or_else(|| "_".to_string()),
-                eventmapping
-                    .actions
-                    .as_ref()
-                    .map(|i| escape(quote! {#i}.to_string()))
-                    .unwrap_or_else(|| "_".to_string()),
-            );
-            let mut label = e.0.clone();
+            let mut label = eventmapping.event.to_string();
 
             if let Some(p) = &eventmapping.event_pattern {
                 label += format!("({})", escape(quote! {#p}.to_string())).as_str();
@@ -45,17 +34,15 @@ pub fn generate_diagram(sm: &ParsedStateMachine) -> String {
             if let Some(actions) = &eventmapping.actions {
                 label += format!(" / {}", escape(quote! {#actions}.to_string())).as_str();
             };
+            label += format!(" = {}", eventmapping.out_state.to_string()).as_str();
             if let Some(e) = &eventmapping.out_state_data_expr {
-                let s = &eventmapping.out_state;
-                label += format!(" -> {}", escape(quote! {#s(#e)}.to_string())).as_str();
+                label += quote! {(#e)}.to_string().as_str();
             };
 
-            diagram_transitions.push((
-                state,
-                eventmapping.out_state.to_string(),
-                format!("\"{}\"", label),
-            ));
-            diagram_events.push(e);
+            let slabel = format!("{}", index);
+            diagram_transitions.push((state, eventmapping.out_state.to_string(), slabel.clone()));
+            diagram_events.push_front((slabel, label));
+            index += 1;
         }
     }
 
@@ -69,12 +56,7 @@ pub fn generate_diagram(sm: &ParsedStateMachine) -> String {
         .collect::<Vec<String>>();
     let event_string = diagram_events
         .iter()
-        .map(|s| {
-            format!(
-                "\t{0} [shape=box label=\"{0}\\n[{1}] / {2}\"]",
-                s.0, s.1, s.2
-            )
-        })
+        .map(|s| format!("\t{0} [shape=box label=\"{0}: {1}\"]", s.0, s.1))
         .collect::<Vec<String>>();
     let transition_string = diagram_transitions
         .iter()
