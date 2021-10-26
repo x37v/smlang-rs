@@ -2,7 +2,7 @@
 
 use smlang::statemachine;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct NoteEventData {
     /// num
     pub num: u8,
@@ -27,19 +27,21 @@ pub enum Events {
 pub struct Context;
 
 statemachine! {
-   transitions: {
+    //add extra attributes to apply to the states enum
+    states_attrs: #[derive(Debug, Clone)],
+    transitions: {
         *State1 + ButtonEvent(Button { down: true, .. }) / ctx.action(event_data); = State2,
         State1 + ButtonEvent(Button { .. }) [!event_data.down] / {ctx.action(event_data)} = State3(2),
         State1 + FooEvent("blah") = State3(30),
         State3(usize) + ButtonEvent(Button { down: true, ..}) [event_data.index == 20 && *state_data < 20]
             / { ctx.action(event_data); println!("foo {}", state_data) } = State3(ctx.action2(*state_data, event_data)),
-        State3(usize) + ButtonEvent(Button { down: false, ..}) = State3(*state_data + 1),
+            State3(usize) + ButtonEvent(Button { down: false, ..}) = State3(*state_data + 1),
 
-        //can't express State3(0) + FooEvent = State1 but can use a guard
-        State3(usize) + FooEvent("blah") [state_data == &0] = State1,
-        State5(NoteEventData) + FooEvent("blah") [state_data.num == 0] = State1,
-        State5(NoteEventData) + BarEvent(0) = State1,
-   }
+            //can't express State3(0) + FooEvent = State1 but can use a guard
+            State3(usize) + FooEvent("blah") [state_data == &0] = State1,
+            State5(NoteEventData) + FooEvent("blah") [state_data.num == 0] = State1,
+            State5(NoteEventData) + BarEvent(0) = State1,
+    }
 }
 
 impl Context {
