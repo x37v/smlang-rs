@@ -8,14 +8,14 @@ use syn::{
 #[derive(Debug)]
 pub struct StateMachine {
     pub transitions: Vec<StateTransition>,
-    pub states_attrs: Option<Vec<Attribute>>,
+    pub states_attrs: Vec<Attribute>,
 }
 
 impl StateMachine {
     pub fn new() -> Self {
         StateMachine {
             transitions: Vec::new(),
-            states_attrs: None,
+            states_attrs: Vec::new(),
         }
     }
 
@@ -23,8 +23,8 @@ impl StateMachine {
         self.transitions.push(transition);
     }
 
-    pub fn set_state_attrs(&mut self, attrs: Vec<Attribute>) {
-        self.states_attrs = Some(attrs);
+    pub fn add_state_attrs(&mut self, attrs: Vec<Attribute>) {
+        self.states_attrs.extend(attrs);
     }
 }
 
@@ -34,7 +34,7 @@ pub struct ParsedStateMachine {
 
     pub states: HashMap<String, Variant>,
     pub states_events_mapping: HashMap<String, Vec<StateTransition>>,
-    pub states_attrs: Option<Vec<Attribute>>,
+    pub states_attrs: Vec<Attribute>,
 }
 
 impl ParsedStateMachine {
@@ -221,11 +221,10 @@ impl parse::Parse for StateMachine {
                         }
                     }
                 }
-                "states_attrs" => {
+                "states_attr" => {
                     input.parse::<Token![:]>()?;
-                    statemachine.set_state_attrs(Attribute::parse_outer(input)?);
+                    statemachine.add_state_attrs(Attribute::parse_outer(input)?);
                 }
-                //TODO states_attrs (Clone, etc)
                 keyword => {
                     return Err(parse::Error::new(
                         input.span(),

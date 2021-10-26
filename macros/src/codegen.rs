@@ -76,11 +76,7 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
         })
         .collect();
 
-    let states_attrs = if let Some(attrs) = &sm.states_attrs {
-        attrs.clone()
-    } else {
-        Vec::new()
-    };
+    let states_attrs = &sm.states_attrs;
 
     // Build the states and events output
     quote! {

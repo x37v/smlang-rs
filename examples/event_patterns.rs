@@ -28,7 +28,7 @@ pub struct Context;
 
 statemachine! {
     //add extra attributes to apply to the states enum
-    states_attrs: #[derive(Debug, Clone)],
+    states_attr: #[derive(Debug, Clone)],
     transitions: {
         *State1 + ButtonEvent(Button { down: true, .. }) / ctx.action(event_data); = State2,
         State1 + ButtonEvent(Button { .. }) [!event_data.down] / {ctx.action(event_data)} = State3(2),
