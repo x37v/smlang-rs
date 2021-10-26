@@ -225,15 +225,13 @@ impl parse::Parse for StateMachine {
                     input.parse::<Token![:]>()?;
                     statemachine.add_state_attrs(Attribute::parse_outer(input)?);
                 }
-                keyword => {
-                    return Err(parse::Error::new(
-                        input.span(),
-                        format!(
-                            "Unknown keyword {}. Support keywords: [\"transitions\"]",
-                            keyword
-                        ),
-                    ))
-                }
+                keyword => return Err(parse::Error::new(
+                    input.span(),
+                    format!(
+                        "Unknown keyword {}. Support keywords: [\"transitions\", \"states_attr\"]",
+                        keyword
+                    ),
+                )),
             }
 
             // No comma at end of line, no more transitions
