@@ -69,19 +69,27 @@ One note is that at the time of this writing there is no way to specify a termin
 
 ### State data
 
-Any state may have some data associated with it (except the starting state), which means that this data is only exists while in this state.
+Any state may have some data associated with it, which means that this data is only exists while in this state.
 You can access the state data in your actions and guards via the variable `state_data`.
 You can also set the destination state value via an expression.
 
+If your initial state has data, that data type must have `Default` implemented.
+
 ```rust
+#[derive(Default, PartialEq, Clone)]
 pub struct MyStateData(pub u32);
 
-statemachine!{
+statemachine! {
     transitions: {
-        *State1(MyStateData) + Event2 [state_data.0 == 42] = State1(MyStateData(2084)),
-        State1(MyStateData) + Event1 = State1(context.process(state_data)),
+        *State1(MyStateData) + Event1 = State2(state_data.clone()),
+        State2(MyStateData) + Event2 [state_data.0 == 42] = State1(MyStateData(2084)),
+        State2(MyStateData) + Event2 [state_data.0 == 2084] = State3(1),
+
+        //hack to get around not being able to have data with terminal state..
+        //add a transition that will never happen (guard is false)
+        State3(usize) + Event1 [false] = State3(3)
+        // ...
     }
-    // ...
 }
 ```
 

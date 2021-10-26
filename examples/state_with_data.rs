@@ -7,8 +7,15 @@
 use smlang::statemachine;
 
 /// State data
-#[derive(PartialEq, Debug, Default)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct MyStateData(pub u32);
+
+// you must implement (or derive) Default to have an initial state with data
+impl Default for MyStateData {
+    fn default() -> Self {
+        Self(20)
+    }
+}
 
 ///Events
 pub enum Events {
@@ -22,7 +29,7 @@ pub enum Events {
 
 statemachine! {
     transitions: {
-        *State1(MyStateData) + Event1 = State2(MyStateData(42)),
+        *State1(MyStateData) + Event1 = State2(state_data.clone()),
         State2(MyStateData) + Event2 [state_data.0 == 42] = State1(MyStateData(2084)),
         State2(MyStateData) + Event2 [state_data.0 == 2084] = State3(1),
 
