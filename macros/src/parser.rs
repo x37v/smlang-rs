@@ -1,21 +1,30 @@
 use proc_macro2::Span;
 use std::collections::HashMap;
-use syn::{braced, bracketed, parenthesized, parse, token, Expr, Ident, Pat, Stmt, Token, Variant};
+use syn::{
+    braced, bracketed, parenthesized, parse, token, Attribute, Expr, Ident, Pat, Stmt, Token,
+    Variant,
+};
 
 #[derive(Debug)]
 pub struct StateMachine {
     pub transitions: Vec<StateTransition>,
+    pub states_attrs: Option<Vec<Attribute>>,
 }
 
 impl StateMachine {
     pub fn new() -> Self {
         StateMachine {
             transitions: Vec::new(),
+            states_attrs: None,
         }
     }
 
     pub fn add_transition(&mut self, transition: StateTransition) {
         self.transitions.push(transition);
+    }
+
+    pub fn set_state_attrs(&mut self, attrs: Vec<Attribute>) {
+        self.states_attrs = Some(attrs);
     }
 }
 
@@ -25,6 +34,7 @@ pub struct ParsedStateMachine {
 
     pub states: HashMap<String, Variant>,
     pub states_events_mapping: HashMap<String, Vec<StateTransition>>,
+    pub states_attrs: Option<Vec<Attribute>>,
 }
 
 impl ParsedStateMachine {
@@ -93,6 +103,7 @@ impl ParsedStateMachine {
             states,
             starting_state,
             states_events_mapping,
+            states_attrs: sm.states_attrs,
         })
     }
 }
@@ -209,6 +220,10 @@ impl parse::Parse for StateMachine {
                             };
                         }
                     }
+                }
+                "states_attrs" => {
+                    input.parse::<Token![:]>()?;
+                    statemachine.set_state_attrs(Attribute::parse_outer(input)?);
                 }
                 //TODO states_attrs (Clone, etc)
                 keyword => {

@@ -76,12 +76,19 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
         })
         .collect();
 
+    let states_attrs = if let Some(attrs) = &sm.states_attrs {
+        attrs.clone()
+    } else {
+        Vec::new()
+    };
+
     // Build the states and events output
     quote! {
 
         /// List of auto-generated states.
         #[allow(missing_docs)]
-        #[derive(PartialEq, Debug)]
+        #[derive(PartialEq)]
+        #(#states_attrs)*
         pub enum States { #(#state_list),* }
 
         impl Default for States {
