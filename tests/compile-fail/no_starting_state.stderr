@@ -1,13 +1,13 @@
 error: No starting state defined, indicate the starting state with a *.
-  --> $DIR/no_starting_state.rs:5:1
+  --> tests/compile-fail/no_starting_state.rs:13:1
    |
-5  | / statemachine! {
-6  | |     transitions: {
-7  | |         //~ ERROR No starting state defined, indicate the starting state with a *
-8  | |         State1 + Event1 = State2,
-9  | |         State2 + Event2 = State3,
-10 | |     }
-11 | | }
+13 | / statemachine! {
+14 | |     transitions: {
+15 | |         //~ ERROR No starting state defined, indicate the starting state with a *
+16 | |         State1 + Event1 = State2,
+17 | |         State2 + Event2 = State3,
+18 | |     }
+19 | | }
    | |_^
    |
-   = note: this error originates in the macro `statemachine` (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
