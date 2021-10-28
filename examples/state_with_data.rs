@@ -29,9 +29,9 @@ pub enum Events {
 
 statemachine! {
     transitions: {
-        *State1(MyStateData) + Event1 = State2(state_data.clone()),
-        State2(MyStateData) + Event2 [state_data.0 == 42] = State1(MyStateData(2084)),
-        State2(MyStateData) + Event2 [state_data.0 == 2084] = State3(1),
+        *State1(MyStateData) + Event1 = State2(state.clone()),
+        State2(MyStateData) + Event2 [state.0 == 42] = State1(MyStateData(2084)),
+        State2(MyStateData) + Event2 [state.0 == 2084] = State3(1),
 
         //hack to get around not being able to have data with terminal state..
         //add a transition that will never happen (guard is false)

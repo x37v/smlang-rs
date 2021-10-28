@@ -18,7 +18,7 @@ pub enum Events {
 
 statemachine! {
     transitions: {
-        *State1 + Event1(_) [event_data == &MyEventData(42)] / ctx.action(event_data); = State2,
+        *State1 + Event1(_) [event == &MyEventData(42)] / ctx.action(event); = State2,
         // ...
     }
 }

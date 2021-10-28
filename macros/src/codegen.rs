@@ -28,7 +28,7 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
             //see if we should capture state data
             let sdata: Option<proc_macro2::TokenStream> = match state.fields {
                 Fields::Unit => None,
-                _ => Some(quote! { (ref state_data) }),
+                _ => Some(quote! { (ref state) }),
             };
 
             //create the event matches
@@ -39,7 +39,7 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
                     let eident = t.event.clone();
                     let pat = t.event_pattern.map(|p| {
                         quote! {
-                            (ref mut event_data @ #p)
+                            (ref mut event @ #p)
                         }
                     });
                     let guard = t.guard.map(|a| {

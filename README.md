@@ -16,7 +16,7 @@ The DSL is defined as follows:
 statemachine!{
     transitions: {
         *SrcState1 + Event1 [ guard() ] / action(); = DstState2, // * denotes starting state
-        SrcState2 + Event2(_) [ ctx.guard2(event_data) ] / { ctx.action2(event_data); println!("{}", event_data) } = DstState1,
+        SrcState2 + Event2(_) [ ctx.guard2(event) ] / { ctx.action2(event); println!("{}", event) } = DstState1,
     }
     // ...
 }
@@ -70,7 +70,7 @@ One note is that at the time of this writing there is no way to specify a termin
 ### State data
 
 Any state may have some data associated with it, which means that this data is only exists while in this state.
-You can access the state data in your actions and guards via the variable `state_data`.
+You can access the state data in your actions and guards via the variable `state`.
 You can also set the destination state value via an expression.
 
 If your initial state has data, that data type must have `Default` implemented.
@@ -81,9 +81,9 @@ pub struct MyStateData(pub u32);
 
 statemachine! {
     transitions: {
-        *State1(MyStateData) + Event1 = State2(state_data.clone()),
-        State2(MyStateData) + Event2 [state_data.0 == 42] = State1(MyStateData(2084)),
-        State2(MyStateData) + Event2 [state_data.0 == 2084] = State3(1),
+        *State1(MyStateData) + Event1 = State2(state.clone()),
+        State2(MyStateData) + Event2 [state.0 == 42] = State1(MyStateData(2084)),
+        State2(MyStateData) + Event2 [state.0 == 2084] = State3(1),
 
         //hack to get around not being able to have data with terminal state..
         //add a transition that will never happen (guard is false)
@@ -102,7 +102,7 @@ Any Event you supply in the DSL will be prefixed with `Events` to create valid R
 
 ### Event data
 
-Data may be passed along with an event into the `guard` and `action`, it is accessed via the `event_data` variable:
+Data may be passed along with an event into the `guard` and `action`, it is accessed via the `event` variable:
 
 ```rust
 pub struct MyEventData(pub u32);
@@ -113,7 +113,7 @@ pub enum Events {
 
 statemachine!{
     transitions: {
-        State1 + Event1(_) [ctx.guard(event_data)] = State2,
+        State1 + Event1(_) [ctx.guard(event)] = State2,
     }
     // ...
 }
@@ -131,8 +131,8 @@ pub enum Events<'a, 'b> {
 
 statemachine!{
     transitions: {
-        State1 + Event2(_) [ctx.guard1(event_data)] = State2,
-        State1 + Event1(_) [ctx.guard2(event_data)] = State3,
+        State1 + Event2(_) [ctx.guard1(event)] = State2,
+        State1 + Event1(_) [ctx.guard2(event)] = State3,
     }
     // ...
 }

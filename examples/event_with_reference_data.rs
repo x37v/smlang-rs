@@ -15,8 +15,8 @@ pub enum Events<'a, 'b> {
 
 statemachine! {
     transitions: {
-        *State1 + Event1(_) [ctx.guard1(event_data)] / {ctx.action1(event_data)} = State2,
-        State2 + Event2(_) [ctx.guard2(event_data)] / {ctx.action2(event_data)} = State3,
+        *State1 + Event1(_) [ctx.guard1(event)] / {ctx.action1(event)} = State2,
+        State2 + Event2(_) [ctx.guard2(event)] / {ctx.action2(event)} = State3,
     }
 }
 
