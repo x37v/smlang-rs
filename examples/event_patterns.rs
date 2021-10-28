@@ -31,9 +31,9 @@ statemachine! {
     states_attr: #[derive(Debug, Clone)],
     transitions: {
         *State1 + ButtonEvent(Button { down: true, .. }) / ctx.action(event); = State2,
-        State1 + ButtonEvent(Button { .. }) [!event.down] / {ctx.action(event)} = State3(2),
+        State1 + ButtonEvent(_) [!event.down] / {ctx.action(event)} = State3(2),
         State1 + FooEvent("blah") = State3(30),
-        State3(usize) + ButtonEvent(Button { down: true, ..}) [event.index == 20 && *state < 20]
+        State3(usize) + ButtonEvent(Button { down: true, ..}) [event.index >= 20 && *state < 20]
             / { ctx.action(event); println!("foo {}", state) } = State3(ctx.action2(*state, event)),
         State3(usize) + ButtonEvent(Button { down: false, ..}) = State3(*state + 1),
 
