@@ -34,12 +34,13 @@ impl Context {
 }
 
 fn main() {
-    let mut sm = StateMachine::new(Context);
-    let result = sm.process_event(Events::Event1(MyEventData(1))); // Guard will fail
+    let mut sm = StateMachine::new();
+    let mut context = Context;
+    let result = sm.process_event(Events::Event1(MyEventData(1)), &mut context); // Guard will fail
 
     assert!(result == None);
 
-    let result = sm.process_event(Events::Event1(MyEventData(42))); // Guard will pass
+    let result = sm.process_event(Events::Event1(MyEventData(42)), &mut context); // Guard will pass
 
     assert!(result == Some(&States::State2));
 }

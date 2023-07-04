@@ -48,13 +48,14 @@ impl Context {
 }
 
 fn main() {
-    let mut sm = StateMachine::new(Context);
+    let mut sm = StateMachine::new();
+    let mut context = Context;
     assert!(sm.state() == &States::State1);
 
     println!("Before action 1");
 
     // Go through the first guard and action
-    let r = sm.process_event(Events::Event1);
+    let r = sm.process_event(Events::Event1, &mut context);
     assert!(r == Some(&States::State2));
 
     println!("After action 1");
@@ -62,7 +63,7 @@ fn main() {
     println!("Before action 2");
 
     // The action will never run as the guard will fail
-    let r = sm.process_event(Events::Event2);
+    let r = sm.process_event(Events::Event2, &mut context);
     assert!(r.is_none());
 
     println!("After action 2");

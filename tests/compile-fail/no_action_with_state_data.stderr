@@ -4,31 +4,15 @@ error[E0423]: expected value, found builtin type `u32`
 14 |         *State1 + Event1 = State2(u32), //~ This state has data associated, but not action is define here to provide it.
    |                                   ^^^ not a value
 
-error[E0618]: expected function, found enum variant `statemachine! {
-    transitions: {
-        *State1 + Event1 = State2(u32), //~ This state has data associated, but not action is define here to provide it.
-    }
-}`
+error[E0618]: expected function, found `States`
   --> tests/compile-fail/no_action_with_state_data.rs:12:1
    |
 12 | / statemachine! {
 13 | |     transitions: {
 14 | |         *State1 + Event1 = State2(u32), //~ This state has data associated, but not action is define here to provide it.
-   | |                            ------ `statemachine! {
-    transitions: {
-        *State1 + Event1 = State2(u32), //~ This state has data associated, but not action is define here to provide it.
-    }
-}` defined here
+   | |                            ------ `States::State2` defined here
 15 | |     }
 16 | | }
    | |_^ call expression requires function
    |
-   = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
-help: `statemachine! {
-   |                 transitions: {
-12 |                     *State1 + Event1 = State2(u32), //~ This state has data associated, but not action is define here to provide it.statemachine! {
-13 |                 }    transitions: {
-14 |             }` is a unit variant, you need to write it without the parenthesis        *State1 + Event1 = State2(u32), //~ This state has data associated, but not action is define here to provide it.
-15 |     }
-16 | }
-   |
+   = note: this error originates in the macro `statemachine` (in Nightly builds, run with -Z macro-backtrace for more info)

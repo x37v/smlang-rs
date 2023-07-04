@@ -26,21 +26,22 @@ statemachine! {
 pub struct Context;
 
 fn main() {
-    let mut sm = StateMachine::new(Context);
+    let mut sm = StateMachine::new();
+    let mut ctx = Context;
     assert!(sm.state() == &States::State1);
 
-    let r = sm.process_event(Events::Event1);
+    let r = sm.process_event(Events::Event1, &mut ctx);
     assert!(r == Some(&States::State2));
 
-    let r = sm.process_event(Events::Event2);
+    let r = sm.process_event(Events::Event2, &mut ctx);
     assert!(r == Some(&States::State3));
 
     // Now all events will not give any change of state
-    let r = sm.process_event(Events::Event1);
+    let r = sm.process_event(Events::Event1, &mut ctx);
     assert!(r == None);
     assert!(sm.state() == &States::State3);
 
-    let r = sm.process_event(Events::Event2);
+    let r = sm.process_event(Events::Event2, &mut ctx);
     assert!(r == None);
     assert!(sm.state() == &States::State3);
 }

@@ -44,8 +44,10 @@ statemachine! {
 pub struct Context;
 
 fn main() {
-    let mut sm = StateMachine::new(Context);
-    let result = sm.process_event(Events::Event1);
+    let mut sm = StateMachine::new();
+    let mut context = Context;
+
+    let result = sm.process_event(Events::Event1, &mut context);
 
     assert!(result == Some(&States::State2(MyStateData(42))));
 }

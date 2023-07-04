@@ -38,13 +38,14 @@ impl Context {
 }
 
 fn main() {
-    let mut sm = StateMachine::new(Context { num_transitions: 0 });
+    let mut ctx = Context { num_transitions: 0 };
+    let mut sm = StateMachine::new();
 
-    assert!(sm.process_event(Events::Event1).is_some()); // ++
-    assert!(sm.process_event(Events::Event1).is_none()); // Will fail
-    assert!(sm.process_event(Events::Event2).is_some()); // ++
+    assert!(sm.process_event(Events::Event1, &mut ctx).is_some()); // ++
+    assert!(sm.process_event(Events::Event1, &mut ctx).is_none()); // Will fail
+    assert!(sm.process_event(Events::Event2, &mut ctx).is_some()); // ++
 
-    assert_eq!(sm.context().num_transitions, 2);
+    assert_eq!(ctx.num_transitions, 2);
 
     // ...
 }

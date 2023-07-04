@@ -97,22 +97,26 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
         /// State machine structure definition.
         pub struct StateMachine {
             state: States,
-            context: Context
+        }
+
+        impl Default for StateMachine {
+            fn default() -> Self {
+                Self::new_with_state(Default::default())
+            }
         }
 
         impl StateMachine {
             /// Creates a new state machine with the specified starting state.
             #[inline(always)]
-            pub fn new(context: Context) -> Self {
-                Self::new_with_state(context, Default::default())
+            pub fn new() -> Self {
+                Self::new_with_state(Default::default())
             }
 
             /// Creates a new state machine with an initial state.
             #[inline(always)]
-            pub fn new_with_state(context: Context, initial_state: States) -> Self {
+            pub fn new_with_state(initial_state: States) -> Self {
                 StateMachine {
                     state: initial_state,
-                    context
                 }
             }
 
@@ -122,25 +126,12 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
                 &self.state
             }
 
-            /// Returns the current context.
-            #[inline(always)]
-            pub fn context(&self) -> &Context {
-                &self.context
-            }
-
-            /// Returns the current context as a mutable reference.
-            #[inline(always)]
-            pub fn context_mut(&mut self) -> &mut Context {
-                &mut self.context
-            }
-
             /// Process an event.
             ///
             /// It will return `Some(&NextState)` if the transition was successful, or `None`
             /// if there was no transition.
             #[allow(unused)]
-            pub fn process_event(&mut self, mut e: Events) -> Option<&States> {
-                let mut ctx = &mut self.context;
+            pub fn process_event(&mut self, mut e: Events, mut ctx: &mut Context) -> Option<&States> {
                 match self.state {
                     #(#transitions)*
                     _ => None,

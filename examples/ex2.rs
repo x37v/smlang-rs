@@ -29,27 +29,29 @@ statemachine! {
 pub struct Context;
 
 fn main() {
-    let mut sm = StateMachine::new(Context);
+    let mut sm = StateMachine::new();
+    let mut context = Context;
+
     assert!(sm.state() == &States::State1);
 
-    let r = sm.process_event(Events::Event1);
+    let r = sm.process_event(Events::Event1, &mut context);
     assert!(r == Some(&States::State2));
 
-    let r = sm.process_event(Events::Event2);
+    let r = sm.process_event(Events::Event2, &mut context);
     assert!(r == Some(&States::State3));
 
     // Go back in the loop a few time
-    let r = sm.process_event(Events::Event3);
+    let r = sm.process_event(Events::Event3, &mut context);
     assert!(r == Some(&States::State2));
 
-    let r = sm.process_event(Events::Event2);
+    let r = sm.process_event(Events::Event2, &mut context);
     assert!(r == Some(&States::State3));
 
-    let r = sm.process_event(Events::Event3);
+    let r = sm.process_event(Events::Event3, &mut context);
     assert!(r == Some(&States::State2));
 
     // Now we cannot use Event1 again, as it is outside the state machine loop
-    let r = sm.process_event(Events::Event1);
+    let r = sm.process_event(Events::Event1, &mut context);
     assert!(r == None);
     assert!(sm.state() == &States::State2);
 }

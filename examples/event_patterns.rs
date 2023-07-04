@@ -56,39 +56,55 @@ impl Context {
 }
 
 fn main() {
-    let mut sm = StateMachine::new(Context);
+    let mut sm = StateMachine::new();
+    let mut ctx = &mut Context;
 
-    let result = sm.process_event(Events::ButtonEvent(Button {
-        index: 0,
-        down: false,
-    }));
+    let result = sm.process_event(
+        Events::ButtonEvent(Button {
+            index: 0,
+            down: false,
+        }),
+        &mut ctx,
+    );
 
     assert_eq!(Some(&States::State3(2)), result);
 
-    let result = sm.process_event(Events::FooEvent(&"blah"));
+    let result = sm.process_event(Events::FooEvent(&"blah"), &mut ctx);
     assert_eq!(None, result);
 
-    let result = sm.process_event(Events::ButtonEvent(Button {
-        index: 0,
-        down: false,
-    }));
+    let result = sm.process_event(
+        Events::ButtonEvent(Button {
+            index: 0,
+            down: false,
+        }),
+        &mut ctx,
+    );
     assert_eq!(Some(&States::State3(3)), result);
 
-    let result = sm.process_event(Events::ButtonEvent(Button {
-        index: 0,
-        down: false,
-    }));
+    let result = sm.process_event(
+        Events::ButtonEvent(Button {
+            index: 0,
+            down: false,
+        }),
+        &mut ctx,
+    );
     assert_eq!(Some(&States::State3(4)), result);
 
-    let result = sm.process_event(Events::ButtonEvent(Button {
-        index: 0,
-        down: true,
-    }));
+    let result = sm.process_event(
+        Events::ButtonEvent(Button {
+            index: 0,
+            down: true,
+        }),
+        &mut ctx,
+    );
     assert_eq!(None, result);
 
-    let result = sm.process_event(Events::ButtonEvent(Button {
-        index: 20,
-        down: true,
-    }));
+    let result = sm.process_event(
+        Events::ButtonEvent(Button {
+            index: 20,
+            down: true,
+        }),
+        &mut ctx,
+    );
     assert_eq!(Some(&States::State3(2084)), result);
 }

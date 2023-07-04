@@ -34,21 +34,22 @@ impl Context {
 }
 
 fn main() {
-    let mut sm = StateMachine::new(Context(0));
+    let mut sm = StateMachine::new();
+    let mut context = Context(0);
     assert!(sm.state() == &States::State1);
-    assert!(sm.context.0 == 0);
+    assert!(context.0 == 0);
 
     // triggers action
-    let r = sm.process_event(Events::Event1);
+    let r = sm.process_event(Events::Event1, &mut context);
     assert!(r == Some(&States::State2));
-    assert!(sm.context.0 == 1);
+    assert!(context.0 == 1);
 
-    let r = sm.process_event(Events::Event2);
+    let r = sm.process_event(Events::Event2, &mut context);
     assert!(r == Some(&States::State1));
-    assert!(sm.context.0 == 1);
+    assert!(context.0 == 1);
 
     // triggers the same action
-    let r = sm.process_event(Events::Event2);
+    let r = sm.process_event(Events::Event2, &mut context);
     assert!(r == Some(&States::State3));
-    assert!(sm.context.0 == 2);
+    assert!(context.0 == 2);
 }

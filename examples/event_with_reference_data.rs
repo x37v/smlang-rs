@@ -43,18 +43,19 @@ impl Context {
 }
 
 fn main() {
-    let mut sm = StateMachine::new(Context);
+    let mut sm = StateMachine::new();
+    let mut context = Context;
 
-    let result = sm.process_event(Events::Event1(&[])); // Guard will fail
+    let result = sm.process_event(Events::Event1(&[]), &mut context); // Guard will fail
     assert!(result == None);
-    let result = sm.process_event(Events::Event1(&[1, 2, 3])); // Guard will pass
+    let result = sm.process_event(Events::Event1(&[1, 2, 3]), &mut context); // Guard will pass
     assert!(result == Some(&States::State2));
 
     let r = 42;
-    let result = sm.process_event(Events::Event2(MyReferenceWrapper(&r))); // Guard will fail
+    let result = sm.process_event(Events::Event2(MyReferenceWrapper(&r)), &mut context); // Guard will fail
     assert!(result == None);
 
     let r = 9001;
-    let result = sm.process_event(Events::Event2(MyReferenceWrapper(&r))); // Guard will pass
+    let result = sm.process_event(Events::Event2(MyReferenceWrapper(&r)), &mut context); // Guard will pass
     assert!(result == Some(&States::State3));
 }
