@@ -8,6 +8,7 @@ use syn::{
 #[derive(Debug)]
 pub struct StateMachine {
     pub transitions: Vec<StateTransition>,
+    pub wildcards: Vec<StateTransition>,
     pub states_attrs: Vec<Attribute>,
 }
 
@@ -15,12 +16,17 @@ impl StateMachine {
     pub fn new() -> Self {
         StateMachine {
             transitions: Vec::new(),
+            wildcards: Vec::new(),
             states_attrs: Vec::new(),
         }
     }
 
     pub fn add_transition(&mut self, transition: StateTransition) {
         self.transitions.push(transition);
+    }
+
+    pub fn add_wildcard(&mut self, transition: StateTransition) {
+        self.wildcards.push(transition);
     }
 
     pub fn add_state_attrs(&mut self, attrs: Vec<Attribute>) {
@@ -71,26 +77,9 @@ impl ParsedStateMachine {
         let mut states = HashMap::new();
         let mut states_events_mapping = HashMap::<String, Vec<StateTransition>>::new();
 
-        for transition in sm.transitions.iter() {
-            //always insert in state, it has data type
-            let s = if let Some(state) = transition.in_state.clone() {
-                let s = state.ident.to_string();
-                states.insert(s.clone(), state);
-                s
-            } else {
-                "_".to_string()
-            };
-
-            //create the states -> transition map
-            if !states_events_mapping.contains_key(&s) {
-                states_events_mapping.insert(s.clone(), Vec::new());
-            }
-            states_events_mapping
-                .get_mut(&s)
-                .unwrap()
-                .push(transition.clone());
-
-            //create out state variant, might get overwritten by in state
+        //create out state variant, might get overwritten by in state
+        let add_out_state = |states: &mut HashMap<String, Variant>,
+                             transition: &StateTransition| {
             let s = transition.out_state.to_string();
             if !states.contains_key(&s) {
                 states.insert(
@@ -103,6 +92,31 @@ impl ParsedStateMachine {
                     },
                 );
             }
+        };
+
+        for transition in sm.transitions.iter() {
+            //always insert in state, it has data type
+            let state = transition.in_state.clone().expect("no wildcards");
+            let s = state.ident.to_string();
+            states.insert(s.clone(), state);
+
+            //create the states -> transition map
+            if !states_events_mapping.contains_key(&s) {
+                states_events_mapping.insert(s.clone(), Vec::new());
+            }
+
+            {
+                let map = states_events_mapping.get_mut(&s).unwrap();
+                map.push(transition.clone());
+
+                //add wildcards
+                for wc in sm.wildcards.iter() {
+                    map.push(wc.clone());
+                    add_out_state(&mut states, &wc);
+                }
+            }
+
+            add_out_state(&mut states, &transition);
         }
 
         Ok(ParsedStateMachine {
@@ -221,7 +235,11 @@ impl parse::Parse for StateMachine {
                             }
 
                             let transition: StateTransition = content.parse()?;
-                            statemachine.add_transition(transition);
+                            if transition.in_state.is_some() {
+                                statemachine.add_transition(transition);
+                            } else {
+                                statemachine.add_wildcard(transition);
+                            }
 
                             // No comma at end of line, no more transitions
                             if content.is_empty() {
