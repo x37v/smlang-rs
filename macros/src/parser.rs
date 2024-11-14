@@ -94,16 +94,21 @@ impl ParsedStateMachine {
             }
         };
 
+        let add_state_mapping =
+            |s: &String, states_events_mapping: &mut HashMap<String, Vec<StateTransition>>| {
+                //create the states -> transition map
+                if !states_events_mapping.contains_key(s) {
+                    states_events_mapping.insert(s.clone(), Vec::new());
+                }
+            };
+
         for transition in sm.transitions.iter() {
             //always insert in state, it has data type
             let state = transition.in_state.clone().expect("no wildcards");
             let s = state.ident.to_string();
             states.insert(s.clone(), state);
 
-            //create the states -> transition map
-            if !states_events_mapping.contains_key(&s) {
-                states_events_mapping.insert(s.clone(), Vec::new());
-            }
+            add_state_mapping(&s, &mut states_events_mapping);
 
             states_events_mapping
                 .get_mut(&s)
@@ -113,12 +118,19 @@ impl ParsedStateMachine {
             add_out_state(&mut states, &transition);
         }
 
-        //add wildcards
-        for wc in sm.wildcards.iter() {
-            for v in states_events_mapping.values_mut() {
-                v.push(wc.clone());
+        if !sm.wildcards.is_empty() {
+            //if we have wildcards, we need to fill in the empty states
+            for s in states.keys() {
+                add_state_mapping(&s, &mut states_events_mapping);
             }
-            add_out_state(&mut states, &wc);
+
+            //add wildcards
+            for wc in sm.wildcards.iter() {
+                for v in states_events_mapping.values_mut() {
+                    v.push(wc.clone());
+                }
+                add_out_state(&mut states, &wc);
+            }
         }
 
         Ok(ParsedStateMachine {
