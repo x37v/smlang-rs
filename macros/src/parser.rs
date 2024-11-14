@@ -105,18 +105,20 @@ impl ParsedStateMachine {
                 states_events_mapping.insert(s.clone(), Vec::new());
             }
 
-            {
-                let map = states_events_mapping.get_mut(&s).unwrap();
-                map.push(transition.clone());
-
-                //add wildcards
-                for wc in sm.wildcards.iter() {
-                    map.push(wc.clone());
-                    add_out_state(&mut states, &wc);
-                }
-            }
+            states_events_mapping
+                .get_mut(&s)
+                .unwrap()
+                .push(transition.clone());
 
             add_out_state(&mut states, &transition);
+        }
+
+        //add wildcards
+        for wc in sm.wildcards.iter() {
+            for v in states_events_mapping.values_mut() {
+                v.push(wc.clone());
+            }
+            add_out_state(&mut states, &wc);
         }
 
         Ok(ParsedStateMachine {
