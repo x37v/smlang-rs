@@ -21,6 +21,7 @@ statemachine! {
     transitions: {
         *State1 + Event1 [ctx.guard()] / ctx.action1(); = State2,
         State2 + Event2 [ctx.guard_fail()] / ctx.action2(); = State3,
+        _ + Event3 = State4
     }
 }
 

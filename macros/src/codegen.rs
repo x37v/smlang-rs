@@ -20,15 +20,21 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
         .states_events_mapping
         .iter()
         .map(|(state, trans)| {
-            let state = sm.states.get(state).unwrap();
-
+            let mut sdata: Option<proc_macro2::TokenStream> = None;
             //get the state ident
-            let sident = state.ident.clone();
-
-            //see if we should capture state data
-            let sdata: Option<proc_macro2::TokenStream> = match state.fields {
-                Fields::Unit => None,
-                _ => Some(quote! { (ref state) }),
+            let sident = if state == "_" {
+                quote! { _ }
+            } else {
+                let state = sm.states.get(state).unwrap();
+                //see if we should capture state data
+                sdata = match state.fields {
+                    Fields::Unit => None,
+                    _ => Some(quote! { (ref state) }),
+                };
+                let i = state.ident.clone();
+                quote! {
+                    States:: #i
+                }
             };
 
             //create the event matches
@@ -66,7 +72,7 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
                 .collect();
 
             quote! {
-                States::#sident #sdata => {
+                #sident #sdata => {
                     match &mut e {
                         #(#events),*
                         _ => None

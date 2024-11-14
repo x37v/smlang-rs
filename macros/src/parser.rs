@@ -65,15 +65,21 @@ impl ParsedStateMachine {
             .find(|sm| sm.start)
             .unwrap()
             .in_state
-            .clone();
+            .clone()
+            .expect("start state must not be wildcard");
 
         let mut states = HashMap::new();
         let mut states_events_mapping = HashMap::<String, Vec<StateTransition>>::new();
 
         for transition in sm.transitions.iter() {
             //always insert in state, it has data type
-            let s = transition.in_state.ident.to_string();
-            states.insert(s.clone(), transition.in_state.clone());
+            let s = if let Some(state) = transition.in_state.clone() {
+                let s = state.ident.to_string();
+                states.insert(s.clone(), state);
+                s
+            } else {
+                "_".to_string()
+            };
 
             //create the states -> transition map
             if !states_events_mapping.contains_key(&s) {
@@ -113,7 +119,7 @@ pub struct StateTransition {
     pub start: bool,
     pub event: Ident,
     pub event_pattern: Option<Pat>,
-    pub in_state: Variant,
+    pub in_state: Option<Variant>,
     pub out_state: Ident,
     pub out_state_data_expr: Option<Expr>,
     pub guard: Option<Expr>,
@@ -129,9 +135,16 @@ impl parse::Parse for StateTransition {
         //
         // Transition DSL:
         // SrcStateVariant + Event(OptionalPattern) [ guard ] / { actions } = DstState(OptionalExpr)
+        // _ + Event(OptionalPattern) [ guard ] / { actions } = DstState(OptionalExpr)
 
         // Input State
-        let in_state: Variant = input.parse()?;
+        // Variant or _
+        let in_state: Option<Variant> = if let Ok(s) = input.parse::<Variant>() {
+            Some(s)
+        } else {
+            input.parse::<Token![_]>().expect("underscore");
+            None
+        };
 
         // Event
         input.parse::<Token![+]>()?;
@@ -225,13 +238,15 @@ impl parse::Parse for StateMachine {
                     input.parse::<Token![:]>()?;
                     statemachine.add_state_attrs(Attribute::parse_outer(input)?);
                 }
-                keyword => return Err(parse::Error::new(
-                    input.span(),
-                    format!(
+                keyword => {
+                    return Err(parse::Error::new(
+                        input.span(),
+                        format!(
                         "Unknown keyword {}. Support keywords: [\"transitions\", \"states_attr\"]",
                         keyword
                     ),
-                )),
+                    ))
+                }
             }
 
             // No comma at end of line, no more transitions
