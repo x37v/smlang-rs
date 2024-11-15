@@ -29,7 +29,7 @@ statemachine! {
         State2 + Event2 [ctx.guard_fail()] / ctx.action2(); = State3,
         State2 + Event3 = State5,
         _ + Event4 = State4,
-        _ + Event6 / ctx.action2();,
+        _ + Event6 / ctx.action3().await;,
         State5 + Event5,
     }
 }
@@ -55,28 +55,32 @@ impl Context {
     fn action2(&mut self) {
         println!("Action 1");
     }
+
+    async fn action3(&mut self) {}
 }
 
 fn main() {
-    let mut sm = StateMachine::new(Context);
-    assert!(sm.state() == &States::State1);
+    smol::block_on(async {
+        let mut sm = StateMachine::new(Context);
+        assert!(sm.state() == &States::State1);
 
-    println!("Before action 1");
+        println!("Before action 1");
 
-    // Go through the first guard and action
-    let r = sm.process_event(Events::Event1);
-    assert!(r == Some(&States::State2));
+        // Go through the first guard and action
+        let r = sm.process_event(Events::Event1).await;
+        assert!(r == Some(&States::State2));
 
-    println!("After action 1");
+        println!("After action 1");
 
-    println!("Before action 2");
+        println!("Before action 2");
 
-    // The action will never run as the guard will fail
-    let r = sm.process_event(Events::Event2);
-    assert!(r.is_none());
+        // The action will never run as the guard will fail
+        let r = sm.process_event(Events::Event2).await;
+        assert!(r.is_none());
 
-    println!("After action 2");
+        println!("After action 2");
 
-    // Now we are stuck due to the guard never returning true
-    assert!(sm.state() == &States::State2);
+        // Now we are stuck due to the guard never returning true
+        assert!(sm.state() == &States::State2);
+    });
 }

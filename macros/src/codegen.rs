@@ -86,6 +86,21 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
 
     let states_attrs = &sm.states_attrs;
 
+    let process_async: Option<proc_macro2::Ident> = if transitions
+        .iter()
+        .find(|t| t.to_string().contains(".await"))
+        .is_some()
+    {
+        Some(proc_macro2::Ident::new(
+            "async",
+            proc_macro2::Span::call_site(),
+        ))
+    } else {
+        None
+    };
+
+    //hack in async, look for `.await`
+
     // Build the states and events output
     quote! {
 
@@ -147,7 +162,7 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
             /// It will return `Some(&NextState)` if the transition was successful, or `None`
             /// if there was no transition.
             #[allow(unused)]
-            pub fn process_event(&mut self, mut e: Events) -> Option<&States> {
+            pub #process_async fn process_event(&mut self, mut e: Events) -> Option<&States> {
                 let mut ctx = &mut self.context;
                 match self.state {
                     #(#transitions)*
