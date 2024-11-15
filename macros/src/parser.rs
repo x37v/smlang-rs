@@ -80,17 +80,19 @@ impl ParsedStateMachine {
         //create out state variant, might get overwritten by in state
         let add_out_state = |states: &mut HashMap<String, Variant>,
                              transition: &StateTransition| {
-            let s = transition.out_state.to_string();
-            if !states.contains_key(&s) {
-                states.insert(
-                    s.clone(),
-                    Variant {
-                        attrs: Vec::new(),
-                        ident: transition.out_state.clone(),
-                        fields: syn::Fields::Unit,
-                        discriminant: None,
-                    },
-                );
+            if let Some(state) = transition.out_state.clone() {
+                let s = state.to_string();
+                if !states.contains_key(&s) {
+                    states.insert(
+                        s.clone(),
+                        Variant {
+                            attrs: Vec::new(),
+                            ident: state,
+                            fields: syn::Fields::Unit,
+                            discriminant: None,
+                        },
+                    );
+                }
             }
         };
 
@@ -148,7 +150,7 @@ pub struct StateTransition {
     pub event: Ident,
     pub event_pattern: Option<Pat>,
     pub in_state: Option<Variant>,
-    pub out_state: Ident,
+    pub out_state: Option<Ident>,
     pub out_state_data_expr: Option<Expr>,
     pub guard: Option<Expr>,
     pub actions: Option<Stmt>,
@@ -203,15 +205,19 @@ impl parse::Parse for StateTransition {
             None
         };
 
-        input.parse::<Token![=]>()?;
-
-        let out_state: Ident = input.parse()?;
-        let out_state_data_expr: Option<Expr> = if input.peek(token::Paren) {
-            let content;
-            parenthesized!(content in input);
-            Some(content.parse()?)
+        //possible transition
+        let (out_state, out_state_data_expr) = if let Ok(_) = input.parse::<Token![=]>() {
+            let out_state: Ident = input.parse()?;
+            let out_state_data_expr: Option<Expr> = if input.peek(token::Paren) {
+                let content;
+                parenthesized!(content in input);
+                Some(content.parse()?)
+            } else {
+                None
+            };
+            (Some(out_state), out_state_data_expr)
         } else {
-            None
+            (None, None)
         };
 
         Ok(StateTransition {

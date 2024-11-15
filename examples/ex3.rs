@@ -17,6 +17,10 @@ pub enum Events {
     Event3,
     ///4
     Event4,
+    ///5
+    Event5,
+    ///6
+    Event6,
 }
 
 statemachine! {
@@ -24,7 +28,9 @@ statemachine! {
         *State1 + Event1 [ctx.guard()] / ctx.action1(); = State2,
         State2 + Event2 [ctx.guard_fail()] / ctx.action2(); = State3,
         State2 + Event3 = State5,
-        _ + Event4 = State4
+        _ + Event4 = State4,
+        _ + Event6 / ctx.action2();,
+        State5 + Event5,
     }
 }
 

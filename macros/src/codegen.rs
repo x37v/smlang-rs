@@ -47,17 +47,27 @@ pub fn generate_code(sm: &ParsedStateMachine) -> proc_macro2::TokenStream {
                     });
 
                     let actions = t.actions;
-                    let out_state = t.out_state;
-                    let out_state_data_expr = t.out_state_data_expr.map(|expr| {
+
+                    let transition = if let Some(out_state) = t.out_state {
+                        let out_state_data_expr = t.out_state_data_expr.map(|expr| {
+                            quote! {
+                                (#expr)
+                            }
+                        });
                         quote! {
-                            (#expr)
+                            self.state = States::#out_state #out_state_data_expr;
+                            Some(&self.state)
                         }
-                    });
+                    } else {
+                        quote! {
+                            None
+                        }
+                    };
+
                     quote! {
                         Events:: #eident #pat #guard => {
                             #actions;
-                            self.state = States::#out_state #out_state_data_expr;
-                            Some(&self.state)
+                            #transition
                         }
                     }
                 })
